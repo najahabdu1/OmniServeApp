@@ -18,6 +18,10 @@ export default function RootLayout() {
   // Load custom fonts
   const [fontsLoaded] = useFonts({
     'SpaceMono-Regular': require('@/assets/fonts/SpaceMono-Regular.ttf'),
+    'Poppins-Regular': require('@/assets/fonts/Poppins/Poppins-Regular.ttf'),
+    'Poppins-Medium': require('@/assets/fonts/Poppins/Poppins-Medium.ttf'),
+    'Poppins-SemiBold': require('@/assets/fonts/Poppins/Poppins-SemiBold.ttf'),
+    'Sansita-Bold': require('@/assets/fonts/Sansita/Sansita-Bold.ttf'),
   });
 
   useEffect(() => {

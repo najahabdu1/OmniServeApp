@@ -1,9 +1,9 @@
 import { Colors } from '@/app/constants/Colors';
-import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -19,6 +19,8 @@ export default function VerifyOtpScreen() {
   const [otp, setOtp] = useState(['', '', '', '']);
   const otpInputs = useRef<Array<TextInput | null>>([null, null, null, null]);
   const [isLoading, setIsLoading] = useState(false);
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
   const handleBack = () => {
     router.back();
@@ -38,6 +40,29 @@ export default function VerifyOtpScreen() {
     if (key === 'Backspace' && !otp[index] && index > 0) {
       otpInputs.current[index - 1]?.focus();
     }
+  };
+  
+  const handleResendOtp = () => {
+    if (resendDisabled) return;
+    
+    // Disable resend button and start countdown
+    setResendDisabled(true);
+    setCountdown(30);
+    
+    // Simulate sending new OTP
+    // In a real app, you would make an API call here
+    
+    // Start countdown timer
+    const timer = setInterval(() => {
+      setCountdown((prevCount) => {
+        if (prevCount <= 1) {
+          clearInterval(timer);
+          setResendDisabled(false);
+          return 0;
+        }
+        return prevCount - 1;
+      });
+    }, 1000);
   };
 
   const handleVerifyOtp = async () => {
@@ -68,7 +93,7 @@ export default function VerifyOtpScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#057676" />
 
       {/* Header */}
       <View style={styles.headerContainer}>
@@ -77,12 +102,15 @@ export default function VerifyOtpScreen() {
           onPress={handleBack}
           hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
         >
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <Image 
+            source={require('@/assets/images/otp-arrow-left.svg')} 
+            style={styles.backIcon} 
+          />
         </TouchableOpacity>
         
-        <Text style={styles.headerTitle}>VERIFY OTP</Text>
+        <Text style={styles.headerTitle}>LOGIN</Text>
         <Text style={styles.headerSubtitle}>
-          Enter the OTP sent to your mobile number
+          Enter the OTP we sent to your mobile number
         </Text>
       </View>
 
@@ -99,7 +127,11 @@ export default function VerifyOtpScreen() {
               ref={(input) => {
                 otpInputs.current[index] = input;
               }}
-              style={styles.otpInput}
+              style={[
+                styles.otpInput,
+                index === 0 && styles.otpInputWithBorder,
+                otp[index] ? styles.otpInputFilled : {}
+              ]}
               value={otp[index]}
               onChangeText={(value) => focusNext(index, value)}
               onKeyPress={({ nativeEvent }) => {
@@ -111,8 +143,16 @@ export default function VerifyOtpScreen() {
           ))}
         </View>
         
-        <TouchableOpacity style={styles.resendContainer}>
-          <Text style={styles.resendText}>Resend OTP</Text>
+        <TouchableOpacity 
+          style={[styles.resendContainer, resendDisabled && styles.resendContainerDisabled]} 
+          onPress={handleResendOtp}
+          disabled={resendDisabled}
+        >
+          <Text style={styles.resendText}>
+            {resendDisabled 
+              ? `Resend code in ${countdown}s` 
+              : "Resend code via sms"}
+          </Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
 
@@ -127,7 +167,7 @@ export default function VerifyOtpScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.verifyButtonText}>
-              Verify
+              Proceed
             </Text>
           )}
         </TouchableOpacity>
@@ -154,18 +194,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  backIcon: {
+    width: 7,
+    height: 14,
+  },
   headerTitle: {
     color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 14,
     fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'Poppins-SemiBold',
+    textAlign: 'center',
   },
   headerSubtitle: {
     color: Colors.background,
     fontSize: 16,
     fontWeight: '700',
     marginTop: 4,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontFamily: 'Sansita-Bold',
   },
   formContainer: {
     flex: 1,
@@ -175,29 +220,48 @@ const styles = StyleSheet.create({
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginTop: 68,
+    marginBottom: 40,
   },
   otpInput: {
-    width: 50,
-    height: 50,
-    borderWidth: 1,
-    borderColor: '#E7EAEF',
+    width: 62,
+    height: 69,
+    backgroundColor: '#E7EAEF',
     borderRadius: 5,
     textAlign: 'center',
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '600',
+  },
+  otpInputWithBorder: {
+    borderWidth: 0.7,
+    borderColor: '#000000',
+    backgroundColor: Colors.background,
+  },
+  otpInputFilled: {
+    backgroundColor: '#E7EAEF',
   },
   resendContainer: {
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 40,
+    backgroundColor: '#E7EAEF',
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  resendContainerDisabled: {
+    opacity: 0.7,
   },
   resendText: {
-    color: '#057676',
+    color: 'rgba(89, 89, 89, 0.8)',
     fontWeight: '500',
+    fontSize: 12,
+    fontFamily: 'Poppins-Medium',
   },
   footerContainer: {
     alignItems: 'center',
     paddingBottom: 32,
+    marginTop: 'auto',
   },
   verifyButton: {
     backgroundColor: '#057676',
@@ -211,5 +275,6 @@ const styles = StyleSheet.create({
     color: Colors.background,
     fontWeight: '500',
     fontSize: 14,
+    fontFamily: 'Poppins-Medium',
   },
 });
